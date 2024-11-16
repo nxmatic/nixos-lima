@@ -1,0 +1,49 @@
+name: Build and Push NixOS Configuration
+
+on:
+
+  push:
+    branches: [ main develop ]  # Adjust as needed
+
+  workflow_dispatch:
+    inputs:
+      gha-runner-label:
+        description: 'GitHub runner label on which performing the jobs'
+        required: false
+        default: 'ubuntu-latest'
+        type: string
+
+jobs:
+
+  build-and-push:
+
+    runs-on:
+
+      - ${{ github.event.inputs.gha-runner-label || ( github.repository_owner == github.actor && 'self-hosted' ) || 'ubuntu-latest' }}
+
+    steps:
+
+      - uses: actions/checkout@v3
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v20
+
+      - name: Build NixOS aarch64 configuration
+        run: |
+          nix build .#packages.x86_64-linux.img \
+            --option sandbox false \
+            --out-link result-aarch64-sdImage
+
+      - name: Setup Cachix
+        uses: cachix/cachix-action@v12
+        with:
+          name: nxmatic
+          authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
+
+      - name: Push to Cachix
+        run: |
+          PATH=$( nix path-info --derivation nixpkgs#yq-go )/bin:$PATH
+
+          nix path-info --json .#packages.aarch64-linux.img | \
+            yq -r '.[].path' | \
+            cachix push nxmatic

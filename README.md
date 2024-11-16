@@ -11,9 +11,11 @@ sh <(curl -L https://nixos.org/nix/install) --daemon
 echo "system-features = nixos-test benchmark big-parallel kvm" >> /etc/nix/nix.conf
 reboot
 
+# build nixos
+nix build .#nixosConfigurations.nixos.config.system.build.toplevel 
+
 # build image
-nix --extra-experimental-features nix-command --extra-experimental-features flakes build .#packages.aarch64-linux.img
-cp $(readlink result)/nixos.img /tmp/lima/nixos-aarch64.img
+nix build .#packages.aarch64-linux.img
 ```
 
 On your mac:
