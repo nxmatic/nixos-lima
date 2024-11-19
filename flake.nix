@@ -8,8 +8,11 @@
     ];
   };
   inputs = {
-    nixpkgs.url = "nixpkgs/nixos-24.11-small";
-    flake-utils.url = "github:numtide/flake-utils";
+    nixpkgs.url = "github:nxmatic/nixpkgs/develop";
+    flake-utils = {
+      url = "github:numtide/flake-utils";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };      
     nixos-generators = {
       url = "github:nix-community/nixos-generators";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -32,7 +35,7 @@
       in
       {
         packages = {
-          img = pkgs.nixos-generators.nixosGenerate {
+          img = nixos-generators.nixosGenerate {
             pkgs = if system == "x86_64-linux" then crossPkgs else pkgs;
             modules = [
               ./nixos.nix
