@@ -15,6 +15,7 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
+
   outputs = { self, nixpkgs, flake-utils, nixos-generators, ... }@attrs: 
     let
       systems = [ "x86_64-linux" "aarch64-linux" ];
@@ -31,7 +32,7 @@
       in
       {
         packages = {
-          img = nixos-generators.nixosGenerate {
+          img = pkgs.nixos-generators.nixosGenerate {
             pkgs = if system == "x86_64-linux" then crossPkgs else pkgs;
             modules = [
               ./nixos.nix
@@ -43,17 +44,30 @@
             format = "raw-efi";
           };
         };
-      }) // { 
-        nixosConfigurations.nixos = nixpkgs.lib.nixosSystem {
-          system = "aarch64-linux";
-          specialArgs = attrs;
-          modules = [
-            ./nixos.nix
-            ./user-config.nix
+
+        # Define the development shell
+        devShells.default = pkgs.mkShell {
+          buildInputs = [
+            pkgs.nixos-generators
+            pkgs.nixos-install
+            pkgs.yq-go
           ];
         };
-        nixosModules.lima = {
-          imports = [ ./nixos.nix ];
+      }) // { 
+        nixosConfigurations = {
+          nixos = nixpkgs.lib.nixosSystem {
+            system = "aarch64-linux";
+            specialArgs = attrs;
+            modules = [
+              ./nixos.nix
+              ./user-config.nix
+            ];
+          };
+        };
+        nixosModules = {
+          lima = {
+            imports = [ ./nixos.nix ];
+          };
         };
       };
 }
