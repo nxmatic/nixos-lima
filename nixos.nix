@@ -33,16 +33,20 @@ in
 
   # Boot configuration
   boot = {
+
     binfmt.emulatedSystems = lib.mkMerge [
       (lib.mkIf isX86_64 [ "aarch64-linux" ])
       (lib.mkIf isAarch64 [ "x86_64-linux" ])
     ];
+
     loader.grub = {
       device = "nodev";
       efiSupport = true;
       efiInstallAsRemovable = true;
     };
+
     kernelPackages = pkgs.linuxPackages_latest;
+
     kernelParams = [
       "console=hvc0"
       "loglevel=7"
@@ -51,6 +55,15 @@ in
       "udev.log_priority=debug"
       "boot.trace"
     ];
+
+    loader.grub = {
+      enable = true;
+      version = 2;
+      efi.canTouchEfiVariables = true;
+      systemd-boot = enable;
+    };    
+
+    # verbosity
     consoleLogLevel = 7;
     initrd.verbose = true;
   };

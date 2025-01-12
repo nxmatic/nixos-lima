@@ -17,11 +17,23 @@
       url = "github:nix-community/nixos-generators";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    home-manager = {
+      url = "github:nix-community/home-manager/release-24.11";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+    devenv = {
+      url = "github:cachix/devenv/latest";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+    flox = {
+      url = "github:flox/flox/v1.3.5";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs = { self, nixpkgs, flake-utils, nixos-generators, ... }@attrs: 
     let
-      systems = [ "x86_64-linux" "aarch64-linux" ];
+      systems = [ "x86_64-linux" "aarch64-linux" "aarch64-darwin" ];
     in
     flake-utils.lib.eachSystem systems (system:
       let
@@ -54,9 +66,15 @@
             pkgs.nixos-generators
             pkgs.nixos-install
             pkgs.yq-go
+            pkgs.flox
           ];
         };
       }) // { 
+        devShells.default = nixpkgs.mkShell {
+          buildInputs = [
+            nixpkgs.flox
+          ];
+        };
         nixosConfigurations = {
           nixos = nixpkgs.lib.nixosSystem {
             system = "aarch64-linux";
