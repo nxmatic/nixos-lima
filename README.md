@@ -1,6 +1,11 @@
 # Run NixOS on a Lima VM
 Heavily inspired from [patryk4815/ctftools](https://github.com/patryk4815/ctftools/tree/master/lima-vm)
 
+This is a fork of https://github.com/kasuboski/nixos-lima
+
+Note that there is also a https://github.com/nixos-lima/nixos-lima project
+that is tyring to collect work from multiple contributors in a single repo.
+
 ## Generating the image
 On a linux machine or ubuntu lima vm for example:
 
