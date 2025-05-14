@@ -56,12 +56,7 @@ in
       "boot.trace"
     ];
 
-    loader.grub = {
-      enable = true;
-      version = 2;
-      efi.canTouchEfiVariables = true;
-      systemd-boot = enable;
-    };    
+    loader.systemd-boot.enable = true; # (for UEFI systems only)
 
     # verbosity
     consoleLogLevel = 7;

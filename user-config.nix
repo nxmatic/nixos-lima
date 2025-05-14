@@ -1,20 +1,23 @@
 { config, modulesPath, pkgs, lib, ... }:
 {
   environment.systemPackages = with pkgs; [
+    bash
+    bat
+    fd
+    fish
     htop
     lsd
-    fd
-    bat
+    lsof
     fzf
-    zoxide
-    yq-go
-    fish
     starship
-	  zsh
+    yq-go
+    zoxide
+    zsh
   ];
 
   programs = {
     fish.enable = true;
+    bash.enable = true;
     zsh.enable = true;
   };
 

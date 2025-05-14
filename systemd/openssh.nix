@@ -25,7 +25,7 @@ in
       PasswordAuthentication = false;
       PermitRootLogin = "no";
       AuthorizedKeysFile = "%h/.ssh/authorized_keys /etc/ssh/authorized_keys.d/%u";
-      AuthorizedKeysCommand = "${groupKeysScript} %u";
+      AuthorizedKeysCommand = "/etc/ssh/group-keys.sh %u";
       AuthorizedKeysCommandUser = "nobody";
     };
   };
@@ -49,6 +49,10 @@ in
         ${pkgs.openssh}/bin/ssh-keygen -t ed25519 -f "$SSH_KEY_NIXBLD" -N "" -C "nixbld@${hostname}"
         ln -sf "${dollar}{SSH_KEY_NIXBLD}.pub" "$SSH_AUTH_KEYS_DIR/nixbld"
       fi
+
+      # Copy scripts with the right ownership
+      cp $groupKeysScript /etc/ssh/group-keys.sh
+      chmod 555 /etc/ssh/group-keys.sh
     '';
   };
 }

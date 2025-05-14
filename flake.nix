@@ -7,28 +7,15 @@
       "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
     ];
   };
+
   inputs = {
-    nixpkgs.url = "github:nxmatic/nixpkgs/develop";
-    flake-utils = {
-      url = "github:numtide/flake-utils";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };      
-    nixos-generators = {
-      url = "github:nix-community/nixos-generators";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-    home-manager = {
-      url = "github:nix-community/home-manager/release-24.11";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-    devenv = {
-      url = "github:cachix/devenv/latest";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-    flox = {
-      url = "github:flox/flox/v1.3.5";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
+    nxmatic-flake-commons.url = "github:nxmatic/nix-flake-commons/develop";
+    nixos-generators.follows = "nxmatic-flake-commons/nixos-generators";
+    nixpkgs.follows = "nxmatic-flake-commons/nixpkgs";
+    flake-utils.follows = "nxmatic-flake-commons/flake-utils";
+    home-manager.follows = "nxmatic-flake-commons/home-manager";
+    devenv.follows = "nxmatic-flake-commons/devenv";
+    flox.follows = "nxmatic-flake-commons/flox";
   };
 
   outputs = { self, nixpkgs, flake-utils, nixos-generators, ... }@attrs: 

@@ -11,7 +11,7 @@ in {
     enable = true;
     description = "Forward ports to the lima-hostagent";
     wantedBy = [ "multi-user.target" ];
-    after = [ "network.target" "lima-init.service" ];
+    after = [ "network.target" "lima-cloud-init.service" ];
     requires = [ "lima-cloud-init.service" ];
     serviceConfig = {
       Type = "simple";

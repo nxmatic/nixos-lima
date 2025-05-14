@@ -35,7 +35,12 @@ let
         mkdir -p -m 700 "$LIMA_CIDATA_SSHDIR"
 
         # Using yq to extract SSH keys and create authorized_keys file
-        ${pkgs.yq-go}/bin/yq '.users[] | select(.name == "lima") | .ssh-authorized-keys[]' "${LIMA_CIDATA_MNT}/user-data" > "$LIMA_CIDATA_SSHDIR/authorized_keys"
+        ${pkgs.yq-go}/bin/yq --from-file=<( cat <<EoF
+        .users[] |
+          select(.name == "$LIMA_CIDATA_USER") |
+          .ssh-authorized-keys[]
+        EoF
+        ) "${LIMA_CIDATA_MNT}/user-data" > "$LIMA_CIDATA_SSHDIR/authorized_keys"
 
         LIMA_CIDATA_GID=$(id -g "$LIMA_CIDATA_USER")
         chown -R "$LIMA_CIDATA_UID:$LIMA_CIDATA_GID" "$LIMA_CIDATA_SSHDIR"
