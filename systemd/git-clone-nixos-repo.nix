@@ -4,7 +4,7 @@
 
 in {    
 
-  systemd.services.clone-nixos-git-repo = {
+  systemd.services.clone-nixos-repo = {
 
     description = "Clone Git Repository if not already cloned";
 
@@ -32,7 +32,8 @@ in {
       [[ ${dollar}{#files[@]} -gt 0 ]] &&
         exit 0
 
-      git clone https://github.com/nxmatic/nixos-lima.git /etc/nixos
+      git clone --single-branch --branch develop \
+        https://github.com/nxmatic/nixos-lima.git /etc/nixos
     '';
   };
 
