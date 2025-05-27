@@ -1,4 +1,4 @@
-{ config, modulesPath, pkgs, lib, ... }:
+{ config, modulesPath, pkgs, lib, hostId, ... }:
 
 let
   isX86_64 = pkgs.stdenv.hostPlatform.system == "x86_64-linux";
@@ -6,8 +6,7 @@ let
   user = "builder";
   keyType = "ed25519";
   keysDirectory = "/etc/ssh/authorized_keys.d";
-in 
-{
+in {
   imports = [
     (import ./disko { inherit config pkgs lib user; })
     (import ./incus.nix { inherit config pkgs lib user; })
@@ -24,14 +23,17 @@ in
       trusted-users = [ user "root" ];
       sandbox = false;
       extra-sandbox-paths = [ "/dev/kvm" ];
+
+      # Flox cache settings
+      extra-substituters = [ "https://cache.flox.dev" ];
+      extra-trusted-public-keys =
+        [ "flox-cache-public-1:7F4OyH7ZCnFhcze3fJdfyXYLQw/aV7GEed86nQ7IsOs=" ];
     }
     (lib.mkIf isX86_64 {
       extra-platforms = [ "aarch64-linux" ];
       extra-sandbox-paths = [ "/run/binfmt" ];
     })
-    (lib.mkIf isAarch64 {
-      extra-platforms = [ "x86_64-linux" ];
-    })
+    (lib.mkIf isAarch64 { extra-platforms = [ "x86_64-linux" ]; })
   ];
 
   # Boot configuration
@@ -48,8 +50,6 @@ in
       efiInstallAsRemovable = true;
     };
 
-    kernelPackages = pkgs.linuxPackages_latest;
-
     kernelParams = [
       "console=hvc0"
       "loglevel=7"
@@ -57,23 +57,48 @@ in
       "systemd.log_target=console"
       "udev.log_priority=debug"
       "boot.trace"
+      "rd.systemd.unit=rescue.target"
+      "rd.systemd.debug_shell=1"
     ];
+
+    kernel.sysctl = {
+      "net.bridge.bridge-nf-call-ip6tables" = 1;
+      "net.bridge.bridge-nf-call-iptables" = 1;
+      "net.bridge.bridge-nf-call-arptables" = 1;
+    };
+
+    supportedFilesystems = [ "ext4" "zfs" "overlay" ];
 
     loader.systemd-boot.enable = true; # (for UEFI systems only)
 
     # verbosity
     consoleLogLevel = 7;
-    initrd.verbose = true;
+    initrd = {
+      enable = true;
+      verbose = true;
+      kernelModules = [ "zfs" "overlay" ];
+      supportedFilesystems = [ "ext4" "zfs" "overlay" ];
+    };
   };
 
   system.stateVersion = "24.11";
 
   fileSystems = {
     "/boot" = {
-      device = lib.mkForce "/dev/disk/by-label/ESP";
+      device = "/dev/disk/by-label/ESP";
       fsType = "vfat";
-      options = [ "rw" "relatime" "fmask=0022" "dmask=0022" "codepage=437" "iocharset=iso8859-1" "shortname=mixed" "errors=remount-ro" ];
+      options = [
+        "rw"
+        "relatime"
+        "fmask=0022"
+        "dmask=0022"
+        "codepage=437"
+        "iocharset=iso8859-1"
+        "shortname=mixed"
+        "errors=remount-ro"
+      ];
     };
+  } // lib.mkIf (!config.disko.enableConfig) {
     "/" = {
       device = "/dev/disk/by-label/nixos";
       autoResize = true;
@@ -109,6 +134,7 @@ in
     openssh = {
       enable = true;
       settings = {
+        AllowGroups = [ "wheel" "ssh" ];
         PermitRootLogin = "no";
         PasswordAuthentication = false;
       };
@@ -127,12 +153,18 @@ in
   # User configuration
   users.users.${user} = {
     isNormalUser = true;
-    extraGroups = [ "wheel" ];
-    openssh.authorizedKeys.keys = [ "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKk7xjKTZV4dmXx8JbNtJmjQCOoZquHVjLsaOTYnSy5Q" ];
+    extraGroups = [ "wheel" "ssh" ];
   };
 
   # Environment
   environment.systemPackages = with pkgs; [
+    bash
+    disko
+    emacs-nox
+    flox
+    git
     yq-go
+    zfs
   ];
+
 }
