@@ -51,7 +51,7 @@ in
       fi
 
       # Copy scripts with the right ownership
-      cp $groupKeysScript /etc/ssh/group-keys.sh
+      cp ${groupKeysScript} /etc/ssh/group-keys.sh
       chmod 555 /etc/ssh/group-keys.sh
     '';
   };
