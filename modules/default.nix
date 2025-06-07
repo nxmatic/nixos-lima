@@ -49,9 +49,6 @@ in {
       efiInstallAsRemovable = true;
     };
 
-    kernelPackages =
-      pkgs.linuxPackages_6_12; # zfs is broken now on latest kernel
-
     kernelParams = [
       "console=hvc0"
       "loglevel=7"
@@ -70,13 +67,19 @@ in {
       "net.bridge.bridge-nf-call-arptables" = 1;
     };
 
-    supportedFilesystems = [ "ext4" "zfs" ];
+    supportedFilesystems = [ "ext4" "zfs" "overlay" ];
 
     loader.systemd-boot.enable = true; # (for UEFI systems only)
 
     # verbosity
     consoleLogLevel = 7;
-    initrd.verbose = true;
+    initrd = {
+      enable = true;
+      verbose = true;
+      supportedFilesystems = [ "ext4" "zfs" "overlay" ];
+    };
+    # initrd.kernelModules = [ "zfs" "zfs-zed" "zfs-zed-rcu" ];
+
   };
 
   system.stateVersion = "24.11";

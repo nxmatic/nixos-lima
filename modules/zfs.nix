@@ -1,4 +1,4 @@
-{ config, lib, ... }:
+{ config, pkgs, lib, ... }:
 
 let
 
@@ -30,7 +30,7 @@ let
   };
 
   zfsFileSystems = lib.listToAttrs (map (mount: {
-    name = "/.zfs/${mount}";
+    name = "/.zfs${mount}";
     value = diskoFileSystems.${mount};
   }) mountPoints);
 
@@ -47,6 +47,12 @@ let
       ];
     };
   }) mountPoints);
+
+  overlayMkdirLines = lib.concatStringsSep "\n" (map (mount:
+    let
+      upper = "${joinMountPoints "/mnt" mount}/upper";
+      work = "${joinMountPoints "/mnt" mount}/workdir";
+    in "mkdir -m0755 " + upper + " " + work) mountPoints);
 
   fileSystems = let
     _value = ext4FileSystems // zfsFileSystems // overlayFileSystems;
@@ -72,5 +78,24 @@ in {
 
     fileSystems = (lib.mkIf config.zfs-overlays.override
       (lib.mkMerge [ (lib.mapAttrs (_: fs: lib.mkForce fs) fileSystems) ]));
+
+    environment.systemPackages = [
+      (pkgs.writeShellScriptBin "bootstrap-zfs" ''
+        #!/usr/bin/env bash
+        set -euxo pipefail
+
+        : → mounting NixOS config
+        systemctl start lima-mount-config
+
+        : → running disko format+mount
+        disko --mode format,mount /etc/nixos/modules/disko "$@"
+
+        : → rebuilding your ZFS system
+        nixos-rebuild boot --flake /etc/nixos/bootstrap#zfs
+
+        : → creating overlay upper/work dirs
+        ${overlayMkdirLines}
+      '')
+    ];
   };
 }
