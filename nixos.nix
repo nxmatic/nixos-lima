@@ -9,9 +9,12 @@ let
 in 
 {
   imports = [
-#    (modulesPath + "/profiles/qemu-guest.nix")
-#    (modulesPath + "/profiles/nix-builder-vm.nix")
-    ./systemd
+    (import ./disko { inherit config pkgs lib user; })
+    (import ./incus.nix { inherit config pkgs lib user; })
+    #(import ./nix-snapshotter.nix { inherit config pkgs lib user; })
+    (import ./systemd { inherit config pkgs lib user; })
+    ./tailscale.nix
+    (import ./zfs.nix { inherit config pkgs lib user; })
   ];
 
   nix.settings = lib.mkMerge [
@@ -81,8 +84,23 @@ in
 
   # Network configuration
   networking = {
-    useDHCP = true;
-    firewall.allowedTCPPorts = [ 22 ];
+    firewall.enable = false;
+    # firewall.allowedTCPPorts = [ 22 2222 ];
+    hostId = hostId;
+    nftables.enable = true;
+    # useDHCP = true;
+    networkmanager.enable = true;
+    nameservers = [
+      # tailscale MagicDNS
+      "100.100.100.100"
+      # Cloudflare
+      "1.1.1.1"
+      "1.0.0.1"
+      # Google
+      "8.8.8.8"
+      "8.8.4.4"
+    ];
+    search = [ "mammoth-skate.ts.net"];
   };
 
   # Services
