@@ -72044,14 +72044,15 @@
         "nxmatic-flake-commons": "nxmatic-flake-commons"
       },
       "locked": {
-        "path": "..",
+        "lastModified": 0,
+        "narHash": "sha256-h8twLpt5343y8CV8XU8Z/zcdPsOmTy88L7LMeVS8ujM=",
+        "path": "../..",
         "type": "path"
       },
       "original": {
-        "path": "..",
+        "path": "../..",
         "type": "path"
-      },
-      "parent": []
+      }
     },
     "poetry2nix": {
       "inputs": {
@@ -78555,22 +78556,6 @@
     },
     "root": {
       "inputs": {
-        "flox": [
-          "parent",
-          "flox"
-        ],
-        "incus-compose": [
-          "parent",
-          "incus-compose"
-        ],
-        "nixos-generators": [
-          "parent",
-          "nixos-generators"
-        ],
-        "nixpkgs": [
-          "parent",
-          "nixpkgs"
-        ],
         "parent": "parent"
       }
     },

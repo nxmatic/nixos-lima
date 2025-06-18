@@ -92,6 +92,11 @@ in {
       enable = true;
       verbose = true;
     };
+
+    postBootCommands = ''
+      chmod 755 /boot || true
+      chmod 600 /boot/loader/.#bootctlrandom-seed* 2>/dev/null || true
+    '';
   };
 
   system.stateVersion = "25.05"; # Update this when upgrading NixOS

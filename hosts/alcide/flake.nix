@@ -1,5 +1,5 @@
 {
-  description = "Host-specific flake for bioskop";
+  description = "Host-specific flake for alcide";
 
   inputs.parent.url = "path:../..";
 
@@ -7,7 +7,7 @@
     let
       system = inputs.system or "aarch64-linux";
       mkNixosOutputs = parent.mkNixosOutputs.${system};
-      hostnameModule = { config, ... }: { lima.host = "bioskop"; };
+      hostnameModule = { config, ... }: { lima.host = "alcide"; };
       nixosOutputs = mkNixosOutputs { extraModules = [ hostnameModule ]; };
       nixosConfiguration = nixosOutputs.nixosConfigurations.zfs;
       guestName = nixosConfiguration.config.networking.hostName;
