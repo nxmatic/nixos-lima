@@ -46,7 +46,7 @@ in {
       : Setting up environment variables
       PATH=/run/current-system/sw/bin:$PATH
 
-      : Cloning NixOS configuration for ${config.lima.host}
+      : Cloning NixOS configuration for ${config.limaHost.hostName}
       mkdir -p /var/run/nixos
       git clone --single-branch --branch develop \
         https://github.com/nxmatic/nixos-lima.git /var/run/nixos/config

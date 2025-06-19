@@ -1,4 +1,4 @@
-{ config, modulesPath, pkgs, lib, hostId, ... }:
+{ config, pkgs, lib, hostId, containerRegistrySystem, ... }:
 
 let
   isX86_64 = pkgs.stdenv.hostPlatform.system == "x86_64-linux";

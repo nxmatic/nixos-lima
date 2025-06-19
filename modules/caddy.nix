@@ -1,0 +1,23 @@
+{ config, pkgs, ... }: {
+  config = {
+    networking.firewall.allowedTCPPorts = [ 80 443 ];
+
+    services.caddy = {
+      enable = true;
+      logDir = "/var/log/caddy";
+      virtualHosts = {
+        host = {
+          serverAliases =
+            [ "${config.networking.hostName}.${config.containerHost.domainName}" ];
+          extraConfig = ''
+            reverse_proxy 127.0.0.1:5000
+              tls {
+                get_certificate tailscale
+              }
+          '';
+        };
+      };
+    };
+
+  };
+}

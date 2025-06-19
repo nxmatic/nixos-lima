@@ -118,8 +118,8 @@ in {
     description =
       "Whether to override fileSystems definitions at initial boot.";
   };
-
   config = {
+
     boot = {
       supportedFilesystems = (lib.mkAfter { zfs = lib.mkForce true; });
       initrd = {
@@ -133,6 +133,7 @@ in {
       });
     };
 
+    # Only enable services and mount filesystems if override is true
     services.zfs = {
       autoScrub.enable = true;
       trim.enable = true;
@@ -150,10 +151,14 @@ in {
       };
     };
 
-    fileSystems = (lib.mkIf config.zfsOverlays.override
-      (lib.mkMerge [ (lib.mapAttrs (_: fs: lib.mkForce fs) fileSystems) ]));
+    fileSystems =
+      (lib.mkMerge [ (lib.mapAttrs (_: fs: lib.mkForce fs) fileSystems) ]);
 
+    enableContainerRegistry = lib.mkIf config.zfsOverlays.override true;
+
+    # Only add extra scripts and shutdown logic if override is true
     environment.systemPackages = [
+      pkgs.zfs
       (pkgs.writeShellScriptBin "bootstrap-zfs" ''
         #!/usr/bin/env bash
         set -euxo pipefail
@@ -178,7 +183,7 @@ in {
 
         : → exporting all ZFS pools
         zpool export -a
-        
+
         : systemctl reboot
       '')
     ];

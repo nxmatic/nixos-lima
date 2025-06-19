@@ -28,6 +28,7 @@
     , incus-compose, nixos-generators, ... }@attrs:
     let
       systems = [ "x86_64-linux" "aarch64-linux" ];
+      lib = nixpkgs.lib;
       baseOverlays = [
         (final: prev: {
           incus-compose = incus-compose.packages.${prev.system}.default;
@@ -35,30 +36,48 @@
         })
       ];
       zfsOverlaysModule = { ... }: { zfsOverlays.override = true; };
-      nixosTailscaleTagModule = { ... }: { tailscale.tag = "nixos"; };
+      nixosTailscaleTagModule = { ... }: { tailscale.tags = [ "nixos" ]; };
       mkModules = { hostModule }: [
         impermanence.nixosModules.impermanence
         disko.nixosModules.disko
         hostModule
         nixosTailscaleTagModule
         ./modules
+        nixosTailscaleTagModule
       ];
-      baseSpecialAttrs = attrs // {
-        hostId = "a225c68e";
-        inherit nixpkgs;
-        inherit disko;
-      };
+      baseSpecialAttrs = { containerRegistrySystem }:
+        attrs // {
+          inherit nixpkgs disko containerRegistrySystem;
+          hostId = "a225c68e";
+        };
 
-      # Host logic from hosts/flake.nix, refactored as a function
+      mkContainerRegistrySystem = { system ? "aarch64-linux", hostModule }:
+        let pkgs = import nixpkgs { inherit system; };
+        in nixpkgs.lib.nixosSystem {
+          inherit system pkgs;
+          modules = [
+            hostModule
+            ./modules/lima-host.nix
+            ./modules/container-host.nix
+            ./modules/caddy.nix
+            ./modules/docker-registry.nix
+            ./modules/tailscale.nix
+            ({ config, ... }: {
+              limaHost.guestName = "ctreg";
+              containerHost.hostName = config.limaHost.hostName;
+            })
+          ];
+        };
+
       mkNixosOutputs =
-        { system ? "aarch64-linux", extraModules ? [ ], zfsEnabled ? false }:
+        { system ? "aarch64-linux", hostModule, containerRegistrySystem }:
         let
           pkgs = import nixpkgs {
             inherit system;
             config = { allowUnfree = true; };
             overlays = baseOverlays;
           };
-          specialArgs = baseSpecialAttrs;
+          specialArgs = (baseSpecialAttrs { inherit containerRegistrySystem; });
         in {
           nixosConfigurations = {
             ext4 = nixpkgs.lib.nixosSystem {
@@ -70,6 +89,7 @@
               modules = (mkModules { inherit hostModule; })
                 ++ [ zfsOverlaysModule ];
             };
+            containerRegistry = containerRegistrySystem;
           };
           nixosDiskImage = nixos-generators.nixosGenerate {
             inherit pkgs system specialArgs;
@@ -77,6 +97,7 @@
             modules = (mkModules { inherit hostModule; });
           };
         };
+
     in flake-utils.lib.eachSystem systems (system:
       let
         pkgs = import nixpkgs {
@@ -96,12 +117,8 @@
           hostModule = { ... }: { limaHost.enable = false; };
         });
       in {
-        mkNixosOutputs = mkNixosOutputs;
-        nixosModules.aarch64-linux = baseModules ++ [{
-          nixpkgs.hostPlatform = "aarch64-linux";
-          nixpkgs.buildPlatform = "aarch64-linux";
-          nixpkgs.overlays = baseOverlays;
-        }];
+        inherit mkContainerRegistrySystem mkNixosOutputs;
+        nixosModules.aarch64-linux = modules;
         nixosSpecialArgs = baseSpecialAttrs;
       });
 }
