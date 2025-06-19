@@ -8,9 +8,7 @@
     skopeo
   ];
 
-  users.users.${user} = {
-    extraGroups = [ "incus-admin" ];
-  };
+  users.users.${user} = { extraGroups = [ "incus-admin" ]; };
 
   virtualisation.incus = {
     enable = true;
@@ -73,18 +71,21 @@
 
   system.activationScripts.incusRootConfig = {
     text = ''
-      install -d -m 0700 ~root/.config/incus
-      cat > ~root/.config/incus/config.yml <<EOF
-  default-remote: local
-  remotes:
-    docker:
-      addr: https://docker.io
-      protocol: oci
-      public: true
-  aliases: {}
-  EOF
-      chown root:root ~root/.config/incus/config.yml
-      chmod 600 ~root/.config/incus/config.yml
+          install -d -m 0700 ~root/.config/incus
+          cat > ~root/.config/incus/config.yml <<EOF
+      default-remote: local
+      remotes:
+        docker:
+          addr: https://docker.io
+          protocol: oci
+          public: true
+      aliases: {}
+      EOF
+          chown root:root ~root/.config/incus/config.yml
+          chmod 600 ~root/.config/incus/config.yml
     '';
   };
+  systemd.services.incusd.postStart = ''
+    /bin/sh -c 'systemd-resolve --interface internalbr0 --set-domain "~incus" --set-dns $(incus network get incusbr0 ipv4.address | cut -d / -f 1)'
+  '';
 }
