@@ -24,6 +24,7 @@ in {
     (import ./systemd { inherit config pkgs lib user; })
     (import ./tailscale.nix { inherit config pkgs lib user; })
     (import ./zfs.nix { inherit config pkgs lib user; })
+    #(import ./remote-nix-store.nix { inherit config pkgs lib; })
   ];
 
   nix.settings = lib.mkMerge [
@@ -185,5 +186,4 @@ in {
     yq-go
     zfs
   ];
-
 }

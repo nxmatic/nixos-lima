@@ -151,8 +151,8 @@ in {
       };
     };
 
-    fileSystems =
-      (lib.mkMerge [ (lib.mapAttrs (_: fs: lib.mkForce fs) fileSystems) ]);
+    fileSystems = (lib.mkIf config.zfsOverlays.override 
+      (lib.mkMerge [ (lib.mapAttrs (_: fs: lib.mkForce fs) fileSystems) ]));
 
     enableContainerRegistry = lib.mkIf config.zfsOverlays.override true;
 

@@ -72072,15 +72072,14 @@
         "nxmatic-flake-commons": "nxmatic-flake-commons"
       },
       "locked": {
-        "lastModified": 0,
-        "narHash": "sha256-M1Tiq+uTOx3rc4ueWJins3QFk7THVT0DjztRi/RuGSU=",
         "path": "../..",
         "type": "path"
       },
       "original": {
         "path": "../..",
         "type": "path"
-      }
+      },
+      "parent": []
     },
     "poetry2nix": {
       "inputs": {
