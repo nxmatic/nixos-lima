@@ -13,7 +13,7 @@ let
   };
 in {
   imports = [
-    (import ./disko { inherit config pkgs lib user; })
+    (import ./disko.nix { inherit config pkgs lib user; })
     (import ./incus.nix { inherit config pkgs lib user; })
     (import ./lima-host.nix { inherit config pkgs lib user; })
     (import ./container-host.nix { inherit config pkgs lib user; })

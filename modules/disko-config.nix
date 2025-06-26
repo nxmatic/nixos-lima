@@ -95,11 +95,11 @@ let
               type = "zfs_fs";
               options = { "com.sun:auto-snapshot" = "false"; };
             };
-            # "nerd/nix" = {
-            #   type = "zfs_fs";
-            #   mountpoint = "/nix";
-            #   options = { "nixos:mount-overlay" = "true"; };
-            # };
+            "nerd/nix" = {
+              type = "zfs_fs";
+              mountpoint = "/nix";
+              options = { "nixos:mount-overlay" = "true"; };
+            };
             "nerd/var" = {
               type = "zfs_fs";
             };
@@ -140,6 +140,11 @@ let
               type = "zfs_fs";
               mountpoint = "/var/lib/lxc";
               options = { "nixos:mount-overlay" = "false"; };
+            };
+            "nerd/var/lib/nixos-containers" = {
+              type = "zfs_fs";
+              mountpoint = "/var/lib/nixos-containers";
+              options = { "nixos:mount-overlay" = "true"; };
             };
             "nerd/var/lib/nix-snapshotter" = {
               type = "zfs_fs";
