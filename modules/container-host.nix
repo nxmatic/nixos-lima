@@ -45,6 +45,11 @@ in {
 
     boot.loader.grub.devices = [ "nodev" ];
 
+    nix.settings = {
+      accept-flake-config = true;
+      experimental-features = [ "nix-command" "flakes" ];
+    };
+
     services.tailscale.interfaceName = cfg.tailscaleInterfaceName;
   };
 }
