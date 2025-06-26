@@ -23,6 +23,13 @@ in {
       description =
         "The domain to use for the lima host, defaults to 'mammoth-skate.ts.net'.";
     };
+
+    tailscaleInterfaceName = lib.mkOption {
+      type = lib.types.str;
+      default = "tailscale0";
+      description =
+        "The name of the Tailscale interface, defaults to 'tailscale0'.";
+    };
   };
 
   config = lib.mkIf cfg.enable {
@@ -37,5 +44,7 @@ in {
     };
 
     boot.loader.grub.devices = [ "nodev" ];
+
+    services.tailscale.interfaceName = cfg.tailscaleInterfaceName;
   };
 }
