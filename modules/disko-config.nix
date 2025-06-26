@@ -141,6 +141,11 @@ let
               mountpoint = "/var/lib/lxc";
               options = { "nixos:mount-overlay" = "false"; };
             };
+            "nerd/var/lib/nixos-containers" = {
+              type = "zfs_fs";
+              mountpoint = "/var/lib/nixos-containers";
+              options = { "nixos:mount-overlay" = "true"; };
+            };
             "nerd/var/lib/nix-snapshotter" = {
               type = "zfs_fs";
               mountpoint = "/var/lib/nix-snapshotter";
