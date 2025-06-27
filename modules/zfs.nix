@@ -1,4 +1,4 @@
-{ config, pkgs, lib, ... }:
+{ config, pkgs, lib, hostId, ... }:
 
 let
 
@@ -119,6 +119,8 @@ in {
       "Whether to override fileSystems definitions at initial boot.";
   };
   config = {
+
+    networking.hostId = lib.mkDefault hostId;
 
     boot = {
       supportedFilesystems = (lib.mkAfter { zfs = lib.mkForce true; });

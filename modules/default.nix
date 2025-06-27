@@ -1,4 +1,4 @@
-{ config, pkgs, lib, hostId, containerRegistrySystem, ... }:
+{ config, pkgs, lib, containerRegistrySystem, ... }:
 
 let
   isX86_64 = pkgs.stdenv.hostPlatform.system == "x86_64-linux";
@@ -11,6 +11,8 @@ let
     ext4 = true;
     overlay = true;
   };
+  # Generate a hostId (should be a 4-byte hex string, e.g. from `head -c4 /dev/urandom | od -A none -t x4`)
+  hostId = "deadbeef";
 in {
   imports = [
     (import ./disko.nix { inherit config pkgs lib user; })
@@ -19,12 +21,14 @@ in {
     (import ./container-host.nix { inherit config pkgs lib user; })
     (import ./containers {
       inherit config pkgs lib user containerRegistrySystem;
+      hostId = hostId;
     })
-    #(import ./nix-snapshotter.nix { inherit config pkgs lib user; })
     (import ./systemd { inherit config pkgs lib user; })
     (import ./tailscale.nix { inherit config pkgs lib user; })
-    (import ./zfs.nix { inherit config pkgs lib user; })
+    (import ./zfs.nix { inherit config pkgs lib user hostId; })
+    (import ./networking-mammoth-skate.nix { inherit config pkgs lib user; })
     #(import ./remote-nix-store.nix { inherit config pkgs lib; })
+    #(import ./nix-snapshotter.nix { inherit config pkgs lib user; })
   ];
 
   nix.settings = lib.mkMerge [
@@ -126,27 +130,10 @@ in {
     };
   };
 
-  # Network configuration
-  networking = {
-    firewall.enable = false;
-    # firewall.allowedTCPPorts = [ 22 2222 ];
-    hostId = hostId;
-    nftables.enable = true;
-    # useDHCP = true;
-    networkmanager.enable = true;
-    wireless.enable = false;
-    nameservers = [
-      # tailscale MagicDNS
-      "100.100.100.100"
-      # Cloudflare
-      "1.1.1.1"
-      "1.0.0.1"
-      # Google
-      "8.8.8.8"
-      "8.8.4.4"
-    ];
-    search = [ "mammoth-skate.ts.net" ];
-  };
+  networking.mammoth-skate.enable = true;
+
+  # Remove or comment out the old networking block to avoid conflicts:
+  # networking = { ... }
 
   # Services
   services = {

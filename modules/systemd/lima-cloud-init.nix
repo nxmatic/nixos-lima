@@ -80,7 +80,7 @@ let
         while IFS=$'\t' read -r what where fstype fsopts; do
           tag="${dollar}{what}"
           mountpoint="${dollar}{where}"
-          unit_name="$(echo "${dollar}{mountpoint}" | sed 's#^/##; s#/#-#g').mount"
+          unit_name="$(systemd-escape --suffix=mount --path "${dollar}{mountpoint}")"
 
           : Parse mount options
           options=""
@@ -99,9 +99,6 @@ let
               x-systemd.before=*)
                 unit_directives="${dollar}{unit_directives}Before=${dollar}{fsopt#x-systemd.before=}\n"
                 ;;
-              X-mount.mkdir)
-                mkdir -p "${dollar}{mountpoint}"
-                ;;
               0|1)
                 : skip fstab dump pass fields
                 ;;
@@ -112,15 +109,15 @@ let
           done
           options="${dollar}{options#,}" # remove leading comma
 
-    #       : Create udev rule for this virtiofs tag
-    #       cat <<EoF | cut -c 7- | tee "/run/udev/rules.d/99-virtiofs-${dollar}{tag}.rules"
-    #       SUBSYSTEM=="virtio", DRIVER=="virtiofs", ATTR{tag}=="${dollar}{tag}", TAG+="systemd", ENV{SYSTEMD_WANTS}+="${dollar}{unit_name}"
-    # EoF
+          : Create udev rule for this virtiofs tag
+          cat <<EoF | cut -c 7- | tee "/run/udev/rules.d/99-virtiofs-${dollar}{tag}.rules"
+          SUBSYSTEM=="virtio", DRIVER=="virtiofs", ATTR{tag}=="${dollar}{tag}", TAG+="systemd", ENV{SYSTEMD_WANTS}+="${dollar}{unit_name}"
+    EoF
 
           : Create systemd mount unit
           cat <<EoF | cut -c 7- | tee "/run/systemd/system/${dollar}{unit_name}"
           [Unit]
-          Description=Virtiofs mount ${dollar}{tag}
+          Description=Virtiofs mount ${dollar}{mountpoint} using ${dollar}{tag} tag
           DefaultDependencies=no
           ${dollar}{unit_directives}
           ConditionCapability=CAP_SYS_ADMIN
@@ -129,7 +126,7 @@ let
           What=${dollar}{tag}
           Where=${dollar}{mountpoint}
           Type=virtiofs
-          Options=${dollar}{options},X-mount.mkdir
+          Options=${dollar}{options}
           [Install]
           WantedBy=multi-user.target
     EoF
@@ -145,13 +142,14 @@ let
     EoF
 
           : Enable and start the automount unit
+          mkdir -p "${dollar}{mountpoint}"
           systemctl daemon-reload
           systemctl enable --runtime --now "${dollar}{unit_name%.mount}.mount" "${dollar}{unit_name%.mount}.automount" || 
             : ignore systemctl load failure
         done
 
-        # : Reload udev to pick up new units and rules
-        # udevadm control --reload-rules
+        : Reload udev to pick up new units and rules
+        udevadm control --reload-rules
 
         : Launch the boot script
         env -S LIMA_CIDATA_MNT=${LIMA_CIDATA_MNT} bash -ex -o pipefail ${LIMA_CIDATA_MNT}/boot.sh
