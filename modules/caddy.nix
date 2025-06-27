@@ -8,10 +8,8 @@
       enable = true;
       logDir = "/var/log/caddy";
       virtualHosts = {
-        host = {
-          serverAliases = [
-            "${config.networking.hostName}.${config.containerHost.domainName}"
-          ];
+        "${config.networking.hostName}.${config.containerHost.domainName}" = {
+          serverAliases = [ "${config.networking.hostName}" ];
           extraConfig = ''
             reverse_proxy 127.0.0.1:5000
               tls {

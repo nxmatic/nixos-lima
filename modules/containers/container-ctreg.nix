@@ -11,8 +11,18 @@ in {
   };
 
   config = lib.mkIf config.enableContainerRegistry {
+    networking = {
+      nat = {
+        enable = true;
+        internalInterfaces = [ "ve-${containerName}" ];
+        externalInterface = "enp0s1";
+      };
+    };
     containers."${containerName}" = {
+      privateNetwork = true;
       enableTun = true;
+      hostAddress = "10.233.0.1";
+      localAddress = "10.233.0.2";
       ephemeral = false;
       autoStart = true;
       bindMounts = {
@@ -31,18 +41,27 @@ in {
           ./../caddy.nix
           ./../docker-registry.nix
           ./../tailscale.nix
+          ./../networking-mammoth-skate.nix
           ({ config, ... }: {
             containerHost = {
               enable = true;
               hostName = containerRegistrySystem.config.limaHost.hostName;
               guestName = containerName;
-              tailscaleInterfaceName = "tailscale1";
             };
             tailscale.tags = [ "nixos" "container" ];
+            networking = {
+              mammoth-skate.enable = true;
+              networkmanager = { unmanaged = [ "tailscale+" ]; };
+              firewall = {
+                enable = true;
+                trustedInterfaces = [ "tailscale0" ];
+                allowedUDPPorts = [ config.services.tailscale.port ];
+                allowedTCPPorts = [ 22 ];
+              };
+              defaultGateway = "10.233.0.1";
+            };
           })
         ];
-
-        networking.nameservers = [ "8.8.8.8" "1.1.1.1" ];
       };
     };
   };
