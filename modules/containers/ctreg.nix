@@ -4,13 +4,16 @@ let
   containerName = "ctreg";
   pkgs = containerRegistrySystem.pkgs;
 in {
-  options.enableContainerRegistry = lib.mkOption {
-    type = lib.types.bool;
-    default = false;
-    description = "Enable the container registry service.";
+  options.containerHost.ctreg = {
+    enable = lib.mkOption {
+      type = lib.types.bool;
+      default = false;
+      description = "Enable the container registry service.";
+    };
+    # Add more nested options here as needed
   };
 
-  config = lib.mkIf config.enableContainerRegistry {
+  config = lib.mkIf config.containerHost.ctreg.enable {
     networking = {
       nat = {
         enable = true;

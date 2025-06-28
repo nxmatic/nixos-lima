@@ -156,7 +156,7 @@ in {
     fileSystems = (lib.mkIf config.zfsOverlays.override 
       (lib.mkMerge [ (lib.mapAttrs (_: fs: lib.mkForce fs) fileSystems) ]));
 
-    enableContainerRegistry = lib.mkIf config.zfsOverlays.override true;
+    containerHost.ctreg.enable = lib.mkIf config.zfsOverlays.override true;
 
     # Only add extra scripts and shutdown logic if override is true
     environment.systemPackages = [
