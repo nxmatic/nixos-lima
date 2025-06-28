@@ -15,18 +15,20 @@ let
   hostId = "deadbeef";
 in {
   imports = [
-    (import ./disko.nix { inherit config pkgs lib user; })
-    (import ./incus.nix { inherit config pkgs lib user; })
-    (import ./lima-host.nix { inherit config pkgs lib user; })
+    (import ./code-server.nix { inherit config pkgs lib user; })
+
     (import ./container-host.nix { inherit config pkgs lib user; })
     (import ./containers {
       inherit config pkgs lib user containerRegistrySystem;
       hostId = hostId;
     })
+    (import ./disko.nix { inherit config pkgs lib user; })
+    (import ./incus.nix { inherit config pkgs lib user; })
+    (import ./lima-host.nix { inherit config pkgs lib user; })
+    (import ./networking-mammoth-skate.nix { inherit config pkgs lib user; })
     (import ./systemd { inherit config pkgs lib user; })
     (import ./tailscale.nix { inherit config pkgs lib user; })
     (import ./zfs.nix { inherit config pkgs lib user hostId; })
-    (import ./networking-mammoth-skate.nix { inherit config pkgs lib user; })
     #(import ./remote-nix-store.nix { inherit config pkgs lib; })
     #(import ./nix-snapshotter.nix { inherit config pkgs lib user; })
   ];
