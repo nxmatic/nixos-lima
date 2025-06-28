@@ -10,5 +10,6 @@
 
   # Add your user to the containerd group for socket access
   users.groups.containerd = { };
-  users.users.${user}.extraGroups = [ "wheel" "containerd" ];
+  users.groups.nixos = { };
+  users.users.${user}.extraGroups = [ "wheel" "containerd" "nixos" ];
 }
