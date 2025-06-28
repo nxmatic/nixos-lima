@@ -18,12 +18,26 @@ in {
         "--hostname=${config.networking.hostName}"
       ];
     };
+    systemd.services.tailscaled-autoconnect = {
+      enable = true;
+      after = lib.mkAfter [ "network-online.target" ];
+      wants = lib.mkAfter [ "network-online.target" ];
+      serviceConfig = {
+        Restart = "on-failure";
+        Type = lib.mkForce "simple";
+        # Do not block boot: do not set WantedBy or RequiredBy to multi-user.target
+        # Remove Install section so systemd does not wait for this service at boot
+      };
+      wantedBy = lib.mkForce [ ];
+      requiredBy = lib.mkForce [ ];
+    };
   };
   options.tailscale = {
     tags = lib.mkOption {
       type = lib.types.listOf lib.types.str;
       default = [ "nixos" ];
-      description = "Tags to use for the Tailscale node, defaults to ['nixos'].";
+      description =
+        "Tags to use for the Tailscale node, defaults to ['nixos'].";
     };
   };
 }
