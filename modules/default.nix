@@ -130,6 +130,10 @@ in {
       fsType = "ext4";
       options = [ "noatime" "nodiratime" "discard" ];
     };
+    "/tmp" = {
+      device = "/var/tmp";
+      options = [ "bind" ];
+    };
   };
 
   networking.mammoth-skate.enable = true;
