@@ -12,16 +12,17 @@
   };
 
   inputs = {
-    nxmatic-flake-commons.url = "github:nxmatic/nix-flake-commons/develop";
-    nixos-generators.follows = "nxmatic-flake-commons/nixos-generators";
-    nixpkgs.follows = "nxmatic-flake-commons/nixpkgs";
-    flake-utils.follows = "nxmatic-flake-commons/flake-utils";
-    home-manager.follows = "nxmatic-flake-commons/home-manager";
-    devenv.follows = "nxmatic-flake-commons/devenv";
-    flox.follows = "nxmatic-flake-commons/flox";
-    incus-compose.follows = "nxmatic-flake-commons/incus-compose";
-    disko.follows = "nxmatic-flake-commons/disko";
-    impermanence.follows = "nxmatic-flake-commons/impermanence";
+    flakes-commons.url = "github:nxmatic/nix-flake-commons/develop";
+    darwin-home.url = "github:nxmatic/nix-darwin-home/develop";
+    nixos-generators.follows = "darwin-home/nixos-generators";
+    nixpkgs.follows = "darwin-home/nixpkgs";
+    flake-utils.follows = "darwin-home/flake-utils";
+    home-manager.follows = "darwin-home/home-manager";
+    devenv.follows = "darwin-home/devenv";
+    flox.follows = "darwin-home/flox";
+    incus-compose.follows = "darwin-home/incus-compose";
+    disko.follows = "darwin-home/disko";
+    impermanence.follows = "darwin-home/impermanence";
   };
 
   outputs = { self, impermanence, disko, nixpkgs, flox, flake-utils
