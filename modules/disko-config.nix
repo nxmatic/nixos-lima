@@ -100,9 +100,12 @@ let
               mountpoint = "/nix";
               options = { "nixos:mount-overlay" = "true"; };
             };
-            "nerd/var" = {
+            "nerd/rancher" = { type = "zfs_fs"; };
+            "nerd/rancher/containerd" = {
               type = "zfs_fs";
+              mountpoint = "/var/lib/rancher/rke2/agent/containerd";
             };
+            "nerd/var" = { type = "zfs_fs"; };
             "nerd/var/tmp" = {
               type = "zfs_fs";
               mountpoint = "/var/tmp";
@@ -113,9 +116,7 @@ let
               mountpoint = "/var/log";
               options = { "nixos:mount-overlay" = "true"; };
             };
-            "nerd/var/lib" = {
-              type = "zfs_fs";
-            };
+            "nerd/var/lib" = { type = "zfs_fs"; };
             "nerd/var/lib/buildkit" = {
               type = "zfs_fs";
               mountpoint = "/var/lib/buildkit";
@@ -176,17 +177,17 @@ let
 
   addPostMountHook = dataset:
     let
-      overlayEnabled = (dataset.options or { }) ? "nixos:mount-overlay" && (dataset.options."nixos:mount-overlay" == "true");
-    in
-      if overlayEnabled then
-        dataset // {
-          postMountHook = ''
-            mkdir -p "/mnt${dataset.mountpoint}/workdir"
-            mkdir -p "/mnt${dataset.mountpoint}/upper"
-          '';
-        }
-      else
-        dataset;
+      overlayEnabled = (dataset.options or { }) ? "nixos:mount-overlay"
+        && (dataset.options."nixos:mount-overlay" == "true");
+    in if overlayEnabled then
+      dataset // {
+        postMountHook = ''
+          mkdir -p "/mnt${dataset.mountpoint}/workdir"
+          mkdir -p "/mnt${dataset.mountpoint}/upper"
+        '';
+      }
+    else
+      dataset;
 
   datasetsWithHooks = datasets:
     lib.mapAttrs (_: ds:
