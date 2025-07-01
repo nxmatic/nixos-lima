@@ -13,7 +13,7 @@
     zsh
   ];
 
-  programs = { zsh.enable = true; };
+  programs = { zsh.enable = lib.mkForce true; };
 
   users.users = {
     nxmatic = {

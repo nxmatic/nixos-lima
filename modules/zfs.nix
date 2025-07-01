@@ -163,7 +163,7 @@ in {
       pkgs.zfs
       (pkgs.writeShellScriptBin "bootstrap-zfs" ''
         #!/usr/bin/env bash
-        set -euxo pipefail
+        set -euo pipefail
 
         : → mounting NixOS config
         systemctl start lima-nixos-configuration

@@ -19,18 +19,18 @@
     flake-utils.follows = "darwin-home/flake-utils";
     home-manager.follows = "darwin-home/home-manager";
     devenv.follows = "darwin-home/devenv";
-    flox.follows = "darwin-home/flox";
     incus-compose.follows = "darwin-home/incus-compose";
     disko.follows = "darwin-home/disko";
     impermanence.follows = "darwin-home/impermanence";
+    flox.follows = "darwin-home/flox";
   };
 
-  outputs = { self, impermanence, disko, nixpkgs, flox, flake-utils
-    , incus-compose, nixos-generators, ... }@attrs:
+  outputs = { self, home-manager, darwin-home, impermanence, disko, nixpkgs
+    , flox, flake-utils, incus-compose, nixos-generators, ... }@inputs:
     let
       systems = [ "x86_64-linux" "aarch64-linux" ];
       lib = nixpkgs.lib;
-      baseOverlays = [
+      overlays = [
         (final: prev: {
           incus-compose = incus-compose.packages.${prev.system}.default;
           flox = flox.packages.${prev.system}.default;
@@ -38,22 +38,66 @@
       ];
       zfsOverlaysModule = { ... }: { zfsOverlays.override = true; };
       nixosTailscaleTagModule = { ... }: { tailscale.tags = [ "nixos" ]; };
-      mkModules = { hostModule }: [
-        impermanence.nixosModules.impermanence
-        disko.nixosModules.disko
-        hostModule
-        nixosTailscaleTagModule
-        ./modules
-        nixosTailscaleTagModule
-      ];
-      baseSpecialAttrs = { containerRegistrySystem }:
-        attrs // {
+      darwinModule = { lib, ... }: {
+        options.system.primaryUser = lib.mkOption {
+          type = lib.types.str;
+          description =
+            "Dummy primary user option for compatibility with shared modules.";
+          default = "";
+        };
+      };
+      homeManagerModule = { config, profile, user, pkgs, lib, ... }: {
+        users.users.${user.name} = {
+          isNormalUser = true;
+          home = toString user.home;
+          shell = user.shell;
+        };
+        programs.zsh.enable = true;
+        hm = darwin-home.homeManagerModules.manager {
+          inherit config pkgs lib user self;
+        };
+        # let nix manage home-manager profiles and use global nixpkgs
+        home-manager = {
+          extraSpecialArgs = { inherit self inputs profile; };
+          useGlobalPkgs = true;
+          useUserPackages = true;
+          verbose = true;
+          backupFileExtension = "nix-backup";
+        };
+      };
+      mkModules = { hostModule ? { ... }: { limaHost.enable = false; }
+        , profileModule ? darwin-home.homeManagerModules.committed
+        , system ? "x86_64-linux", overlays ? overlays, profile ? null }:
+        let
+          pkgs = (import nixpkgs {
+            inherit system overlays;
+            config = { allowUnfree = true; };
+          }) // {
+            myPkgsMarker = true;
+          };
+          user = profileModule.user or profileModule.profile.user or null;
+        in [
+          darwinModule
+          hostModule
+          profileModule
+          # (homeManagerModule {
+          #   inherit profile user pkgs lib self;
+          #   config = self.config;
+          # })
+          impermanence.nixosModules.impermanence
+          disko.nixosModules.disko
+          nixosTailscaleTagModule
+          ./modules
+        ];
+      specialAttrs = { containerRegistrySystem }:
+        inputs // {
           inherit nixpkgs disko containerRegistrySystem;
           hostId = "a225c68e";
         };
 
-      mkContainerRegistrySystem = { system ? "aarch64-linux", hostModule }:
-        let pkgs = import nixpkgs { inherit system; };
+      mkContainerRegistrySystem =
+        { system ? "a86_64-linux", hostModule, overlays ? overlays }:
+        let pkgs = import nixpkgs { inherit overlays system; };
         in nixpkgs.lib.nixosSystem {
           inherit system pkgs;
           modules = [
@@ -74,53 +118,39 @@
         { system ? "aarch64-linux", hostModule, containerRegistrySystem }:
         let
           pkgs = import nixpkgs {
-            inherit system;
+            inherit overlays system;
             config = { allowUnfree = true; };
-            overlays = baseOverlays;
           };
-          specialArgs = (baseSpecialAttrs { inherit containerRegistrySystem; });
+          profileModule = darwin-home.homeManagerModules.profiles.committed {
+            inherit pkgs lib;
+          };
+          specialArgs = (specialAttrs { inherit containerRegistrySystem; });
         in {
           nixosConfigurations = {
             ext4 = nixpkgs.lib.nixosSystem {
               inherit system pkgs specialArgs;
-              modules = (mkModules { inherit hostModule; });
+              modules = (mkModules {
+                inherit hostModule profileModule system overlays;
+              }) ++ [{
+                boot.supportedFilesystems = [ "ext4" ];
+                boot.kernelModules = [ "ext4" ];
+              }];
             };
             zfs = nixpkgs.lib.nixosSystem {
               inherit system pkgs specialArgs;
-              modules = (mkModules { inherit hostModule; })
-                ++ [ zfsOverlaysModule ];
+              modules = (mkModules {
+                inherit hostModule profileModule system overlays;
+              }) ++ [ zfsOverlaysModule ];
             };
             containerRegistry = containerRegistrySystem;
           };
           nixosDiskImage = nixos-generators.nixosGenerate {
             inherit pkgs system specialArgs;
             format = "raw-efi";
-            modules = (mkModules { inherit hostModule; });
+            modules =
+              (mkModules { inherit hostModule profileModule system overlays; });
           };
         };
-
-    in flake-utils.lib.eachSystem systems (system:
-      let
-        pkgs = import nixpkgs {
-          inherit system;
-          overlays = baseOverlays;
-        };
-        crossPkgs = import nixpkgs {
-          inherit system;
-          crossSystem = { config = "aarch64-unknown-linux-gnu"; };
-          overlays = baseOverlays;
-        };
-        modules = [{
-          nixpkgs.hostPlatform = "aarch64-linux";
-          nixpkgs.buildPlatform = system;
-          nixpkgs.overlays = baseOverlays;
-        }] ++ (mkModules {
-          hostModule = { ... }: { limaHost.enable = false; };
-        });
-      in {
-        inherit mkContainerRegistrySystem mkNixosOutputs;
-        nixosModules.aarch64-linux = modules;
-        nixosSpecialArgs = baseSpecialAttrs;
-      });
+    in flake-utils.lib.eachSystem systems
+    (system: { inherit system mkContainerRegistrySystem mkNixosOutputs; });
 }
-
