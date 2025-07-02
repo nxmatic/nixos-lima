@@ -1,5 +1,5 @@
-{ config, pkgs, lib, containerRegistrySystem, ... }: {
+{ config, pkgs, lib, containerRegistryConfiguration, ... }: {
   imports = [
-    (import ./ctreg.nix { inherit config pkgs lib containerRegistrySystem; })
+    (import ./ctreg.nix { inherit config pkgs lib containerRegistryConfiguration; })
   ];
 }

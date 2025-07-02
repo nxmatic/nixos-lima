@@ -86,13 +86,13 @@
           nixosTailscaleTagModule
           ./modules
         ];
-      specialAttrs = { containerRegistrySystem }:
+      specialAttrs = { containerRegistryConfiguration }:
         inputs // {
-          inherit nixpkgs disko containerRegistrySystem;
+          inherit nixpkgs disko containerRegistryConfiguration;
           hostId = "a225c68e";
         };
 
-      mkContainerRegistrySystem =
+      mkcontainerRegistryConfiguration =
         { system ? "a86_64-linux", hostModule, overlays ? overlays }:
         let pkgs = import nixpkgs { inherit overlays system; };
         in nixpkgs.lib.nixosSystem {
@@ -112,7 +112,7 @@
         };
 
       mkNixosOutputs =
-        { system ? "aarch64-linux", hostModule, containerRegistrySystem }:
+        { system ? "aarch64-linux", hostModule, containerRegistryConfiguration }:
         let
           pkgs = import nixpkgs {
             inherit overlays system;
@@ -121,7 +121,7 @@
           profileModule = darwin-home.homeManagerModules.profiles.committed {
             inherit pkgs lib;
           };
-          specialArgs = (specialAttrs { inherit containerRegistrySystem; });
+          specialArgs = (specialAttrs { inherit containerRegistryConfiguration; });
         in {
           nixosConfigurations = {
             ext4 = nixpkgs.lib.nixosSystem {
@@ -139,7 +139,7 @@
                 inherit hostModule profileModule system overlays;
               }) ++ [ zfsOverlaysModule ];
             };
-            containerRegistry = containerRegistrySystem;
+            containerRegistry = containerRegistryConfiguration;
           };
           nixosDiskImage = nixos-generators.nixosGenerate {
             inherit pkgs system specialArgs;
@@ -149,5 +149,5 @@
           };
         };
     in flake-utils.lib.eachSystem systems
-    (system: { inherit system mkContainerRegistrySystem mkNixosOutputs; });
+    (system: { inherit system mkcontainerRegistryConfiguration mkNixosOutputs; });
 }

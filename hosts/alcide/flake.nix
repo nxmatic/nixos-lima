@@ -8,20 +8,20 @@
       system = inputs.system or "aarch64-linux";
 
       # NixOS Container
-      mkContainerRegistrySystem = parent.mkContainerRegistrySystem.${system};
+      mkcontainerRegistryConfiguration = parent.mkcontainerRegistryConfiguration.${system};
       hostModule = { ... }: {
         limaHost = {
           enable = true;
           hostName = "alcide";
         };
       };
-      containerRegistrySystem =
-        mkContainerRegistrySystem { inherit system hostModule; };
+      containerRegistryConfiguration =
+        mkcontainerRegistryConfiguration { inherit system hostModule; };
 
       # NixOS configurations
       mkNixosOutputs = parent.mkNixosOutputs.${system};
       nixosOutputs =
-        mkNixosOutputs { inherit containerRegistrySystem hostModule; };
+        mkNixosOutputs { inherit containerRegistryConfiguration hostModule; };
       nixosConfiguration = nixosOutputs.nixosConfigurations.zfs;
       guestName = nixosConfiguration.config.networking.hostName;
     in {

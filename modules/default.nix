@@ -1,4 +1,4 @@
-{ config, pkgs, lib, containerRegistrySystem, ... }:
+{ config, pkgs, lib, containerRegistryConfiguration, ... }:
 
 let
   isX86_64 = pkgs.stdenv.hostPlatform.system == "x86_64-linux";
@@ -19,7 +19,7 @@ in {
 
     (import ./container-host.nix { inherit config pkgs lib user; })
     (import ./containers {
-      inherit config pkgs lib user containerRegistrySystem;
+      inherit config pkgs lib user containerRegistryConfiguration;
       hostId = hostId;
     })
     (import ./disko.nix { inherit config pkgs lib user; })

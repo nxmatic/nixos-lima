@@ -1,8 +1,8 @@
-{ config, lib, containerRegistrySystem, ... }:
+{ config, lib, containerRegistryConfiguration, ... }:
 
 let
   containerName = "ctreg";
-  pkgs = containerRegistrySystem.pkgs;
+  pkgs = containerRegistryConfiguration.pkgs;
 in {
   options.containerHost.ctreg = {
     enable = lib.mkOption {
@@ -48,7 +48,7 @@ in {
           ({ config, ... }: {
             containerHost = {
               enable = true;
-              hostName = containerRegistrySystem.config.limaHost.hostName;
+              hostName = containerRegistryConfiguration.config.limaHost.hostName;
               guestName = containerName;
             };
             tailscale.tags = [ "nixos" "container" ];

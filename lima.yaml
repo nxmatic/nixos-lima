@@ -28,13 +28,14 @@ hostResolver:
     host.containers.internal: 192.168.5.15
 
 images:
-  - location: "file:///Users/nxmatic/Gits/nxmatic/nixos-lima/result/nixos.img"
+  - location: "file:///Users/stephane.lacoin/Gits/nxmatic/nixos-lima/result/nixos.img"
     arch: "aarch64"
 mounts:
 - location: "~"
+  #mountPoint: "/mnt/host-home"
   writable: true
-- location: "/tmp/lima"
-  writable: true
+- location: "/Volumes"
+  writable:
 
 mountType: "virtiofs"
 
