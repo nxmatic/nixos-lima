@@ -32,8 +32,8 @@
       lib = nixpkgs.lib;
       overlays = [
         (final: prev: {
-          incus-compose = incus-compose.packages.${prev.system}.default;
-          flox = flox.packages.${prev.system}.default;
+          incus-compose = inputs.incus-compose.packages.${final.system}.default;
+          flox = inputs.flox.packages.${final.system}.default;
         })
       ];
       zfsOverlaysModule = { ... }: { zfsOverlays.override = true; };
@@ -56,7 +56,6 @@
         hm = darwin-home.homeManagerModules.manager {
           inherit config pkgs lib user self;
         };
-        # let nix manage home-manager profiles and use global nixpkgs
         home-manager = {
           extraSpecialArgs = { inherit self inputs profile; };
           useGlobalPkgs = true;
@@ -69,11 +68,9 @@
         , profileModule ? darwin-home.homeManagerModules.committed
         , system ? "x86_64-linux", overlays ? overlays, profile ? null }:
         let
-          pkgs = (import nixpkgs {
+          pkgs = import nixpkgs {
             inherit system overlays;
             config = { allowUnfree = true; };
-          }) // {
-            myPkgsMarker = true;
           };
           user = profileModule.user or profileModule.profile.user or null;
         in [
